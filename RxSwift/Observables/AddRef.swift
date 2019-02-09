@@ -15,11 +15,11 @@ final class AddRefSink<O: ObserverType> : Sink<O>, ObserverType {
     
     func on(_ event: Event<Element>) {
         switch event {
-        case .next(_):
-            forwardOn(event)
-        case .completed, .error(_):
-            forwardOn(event)
-            dispose()
+        case .next:
+            self.forwardOn(event)
+        case .completed, .error:
+            self.forwardOn(event)
+            self.dispose()
         }
     }
 }
@@ -31,14 +31,14 @@ final class AddRef<Element> : Producer<Element> {
     private let _refCount: RefCountDisposable
     
     init(source: Observable<Element>, refCount: RefCountDisposable) {
-        _source = source
-        _refCount = refCount
+        self._source = source
+        self._refCount = refCount
     }
     
     override func run<O: ObserverType>(_ observer: O, cancel: Cancelable) -> (sink: Disposable, subscription: Disposable) where O.E == Element {
-        let releaseDisposable = _refCount.retain()
+        let releaseDisposable = self._refCount.retain()
         let sink = AddRefSink(observer: observer, cancel: cancel)
-        let subscription = Disposables.create(releaseDisposable, _source.subscribe(sink))
+        let subscription = Disposables.create(releaseDisposable, self._source.subscribe(sink))
 
         return (sink: sink, subscription: subscription)
     }
